@@ -1,46 +1,58 @@
 @echo off
 setlocal
-cd /d "%~dp0"
 
-echo ============================================================
+echo =====================================================
 echo Compilando Procesador Bancario
- echo ============================================================
+echo =====================================================
 
-python --version >nul 2>&1
-if errorlevel 1 (
-  echo No se encontro Python. Instalalo y marcá "Add Python to PATH".
-  pause
-  exit /b 1
-)
-
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
-set ADD_ASSETS=
-if exist "assets" (
-  set ADD_ASSETS=--add-data "assets;assets"
+if errorlevel 1 (
+    echo.
+    echo Error instalando requirements.
+    pause
+    exit /b 1
 )
 
-set ICON_ARG=
-if exist "assets\icono_nuevo_app.ico" (
-  set ICON_ARG=--icon "assets\icono_nuevo_app.ico"
-)
+echo.
+echo Limpiando compilaciones anteriores...
+if exist build rmdir /s /q build
+if exist dist rmdir /s /q dist
+if exist Procesador_Bancario.spec del /q Procesador_Bancario.spec
 
-pyinstaller --noconfirm --clean --onedir --windowed ^
+echo.
+echo Compilando app principal...
+
+python -m PyInstaller ^
+  --noconfirm ^
+  --clean ^
+  --onedir ^
+  --windowed ^
   --name "Procesador_Bancario" ^
-  %ICON_ARG% ^
-  %ADD_ASSETS% ^
+  --icon "assets\icono_nuevo_app.ico" ^
+  --add-data "assets\logo_girando_desde_cero_sin_fondo.gif;assets" ^
+  --add-data "assets\logo_girando_3d_corregido.gif;assets" ^
+  --add-data "VERSION.txt;." ^
+  --hidden-import pandas ^
+  --hidden-import openpyxl ^
+  --hidden-import xlrd ^
+  --hidden-import numpy ^
+  --hidden-import PIL ^
+  --hidden-import PIL.Image ^
+  --hidden-import PIL.ImageTk ^
   "app_src\app.py"
 
 if errorlevel 1 (
-  echo.
-  echo Error compilando la app.
-  pause
-  exit /b 1
+    echo.
+    echo Error compilando la app.
+    pause
+    exit /b 1
 )
 
 echo.
-echo App compilada en:
-echo dist\Procesador_Bancario\Procesador_Bancario.exe
-echo.
+echo =====================================================
+echo App compilada correctamente.
+echo Ubicacion:
+echo dist\Procesador_Bancario\
+echo =====================================================
 pause
