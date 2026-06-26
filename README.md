@@ -32,24 +32,7 @@ Bancos contemplados para detección por nombre, a completar con reglas específi
 - BBVA / Francés
 - ICBC
 
-## Seguridad de datos
 
-El repositorio público no debe contener:
-
-- Nombres reales de empresas.
-- CUITs reales.
-- Extractos bancarios reales.
-- PDFs, Excel o CSV de clientes.
-- Saldos, movimientos reales o reportes generados.
-- Tokens de GitHub o claves privadas.
-
-La app carga empresas desde un archivo local privado llamado:
-
-```txt
-empresas_config.json
-```
-
-Ese archivo está ignorado por `.gitignore` y no debe subirse al repo.
 
 ## Configuración privada de empresas
 
