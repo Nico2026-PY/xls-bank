@@ -12,6 +12,7 @@ dist/
 # Releases locales
 Procesador_Bancario_Windows.zip
 launcher_dist/
+release/
 release/*.zip
 
 # Datos sensibles / salidas reales
@@ -26,6 +27,9 @@ release/*.zip
 # Windows
 Thumbs.db
 Desktop.ini
+
+# VS Code local
+.vscode/
 
 # Configuración privada local - NO subir
 empresas_config.json
