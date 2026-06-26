@@ -1,0 +1,12 @@
+CONFIGURACIÓN PRIVADA DE EMPRESAS
+
+1) Copiá empresas_config.example.json.
+2) Renombralo como empresas_config.json.
+3) Cargá tus nombres/alias reales.
+4) NO lo subas a GitHub.
+
+Ubicación recomendada en Windows:
+%APPDATA%\Procesador_Bancario\empresas_config.json
+
+También podés usar una variable de entorno:
+setx BANCOS_EMPRESAS_CONFIG "C:\RutaPrivada\empresas_config.json"

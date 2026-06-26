@@ -1,0 +1,52 @@
+name: Build Windows Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Build app
+        shell: pwsh
+        run: |
+          $addAssets = @()
+          if (Test-Path "assets") {
+            $addAssets = @("--add-data", "assets;assets")
+          }
+          $iconArgs = @()
+          if (Test-Path "assets\icono_nuevo_app.ico") {
+            $iconArgs = @("--icon", "assets\icono_nuevo_app.ico")
+          }
+          pyinstaller --noconfirm --clean --onedir --windowed --name "Procesador_Bancario" @iconArgs @addAssets "app_src\app.py"
+
+      - name: Zip app
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist\Procesador_Bancario\*" -DestinationPath "Procesador_Bancario_Windows.zip" -Force
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" "Procesador_Bancario_Windows.zip" --title "Procesador Bancario ${{ github.ref_name }}" --notes "Release automática de Procesador Bancario."

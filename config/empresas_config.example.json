@@ -1,0 +1,16 @@
+{
+  "empresas": {
+    "EMPRESA_1": {
+      "claves": [
+        "empresa 1",
+        "razon social ejemplo",
+        "alias archivo"
+      ],
+      "cuit": "opcional-no-subir-cuit-real-al-repo"
+    },
+    "EMPRESA_2": [
+      "empresa 2",
+      "otro alias"
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Releases locales
+Procesador_Bancario_Windows.zip
+launcher_dist/
+release/*.zip
+
+# Datos sensibles / salidas reales
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.pdf
+*.log
+*.tmp
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Configuración privada local - NO subir
+empresas_config.json
+config/empresas_config.json
+*_privado*.json
+*.secret.json
+.env
+secrets/
+private/
+privado/
