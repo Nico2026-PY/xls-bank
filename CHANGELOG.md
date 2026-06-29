@@ -1,5 +1,15 @@
 # Changelog - XlsBank
 
+## v0.2.15-dev
+
+### Limpieza del repositorio
+- Se elimina `README.txt` desactualizado.
+- Se mueve documentación secundaria a `docs/`.
+- Se crea carpeta `scripts/` para instaladores y utilidades.
+- Se crea carpeta `scripts/legacy/` para scripts históricos.
+- Se eliminan artefactos locales de build de la raíz del proyecto.
+- Se refuerza `.gitignore` para evitar subir ZIPs, builds, archivos Excel, CSV, PDF, logs y configuración privada.
+
 ## v0.2.14
 
 ### Preparación comercial
