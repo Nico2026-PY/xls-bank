@@ -14,7 +14,7 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from xlsbank.config import ( APP_NAME, APP_VERSION, APP_AUTHOR, APP_COPYRIGHT, APP_SUBTITLE, CONFIG_EMPRESAS_ARCHIVO, BANCOS_CLAVES, COLUMNAS_SALIDA,)
-from xlsbank.utils import ( ruta_recurso, norm, limpiar_numero, limpiar_fecha, normalizar_fechas_movimientos, ordenar_por_fecha_real, )
+from xlsbank.utils import ( ruta_recurso, norm, limpiar_numero, limpiar_fecha, normalizar_fechas_movimientos, ordenar_por_fecha_real, limpiar_celda_texto, valor_excel, nombre_hoja_seguro, )
 
 
 # Versión v0.2.15: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
@@ -521,23 +521,6 @@ def procesar_galicia(path):
     out['Referencia'] = df.get('Número de Comprobante', '')
     out['Etiquetas'] = ''
     return out[COLUMNAS_SALIDA]
-
-
-def limpiar_celda_texto(valor):
-    """Convierte una celda a texto limpio, evitando nan/none/nat."""
-    if valor is None:
-        return ''
-
-    try:
-        if pd.isna(valor):
-            return ''
-    except Exception:
-        pass
-
-    texto = str(valor).strip()
-    if texto.lower() in ['nan', 'none', 'nat']:
-        return ''
-    return re.sub(r'\s+', ' ', texto)
 
 
 def es_codigo_cuenta_patagonia(texto):
@@ -1449,26 +1432,6 @@ def escribir_bloque(ws, fila, nombre_bloque, df):
                 c.number_format='dd/mm/yyyy'
         fila += 1
     return fila + 1
-
-
-def valor_excel(valor):
-    """Convierte valores pandas/numpy a valores seguros para openpyxl."""
-    try:
-        if pd.isna(valor):
-            return None
-    except Exception:
-        pass
-
-    if isinstance(valor, pd.Timestamp):
-        return valor.to_pydatetime()
-
-    return valor
-
-
-def nombre_hoja_seguro(nombre):
-    nombre = re.sub(r'[\/*?:\[\]]', '-', str(nombre))
-    return nombre[:31] if len(nombre) > 31 else nombre
-
 
 def aplicar_formato_tabla(ws, money_cols=None, date_cols=None):
     money_cols = set(money_cols or [])

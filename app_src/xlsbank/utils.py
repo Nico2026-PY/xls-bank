@@ -167,3 +167,40 @@ def ordenar_por_fecha_real(df, descendente=True):
     )
 
     return df.drop(columns=['_FechaOrden'])
+
+def limpiar_celda_texto(valor):
+    """Convierte una celda a texto limpio, evitando nan/none/nat."""
+    if valor is None:
+        return ''
+
+    try:
+        if pd.isna(valor):
+            return ''
+    except Exception:
+        pass
+
+    texto = str(valor).strip()
+    if texto.lower() in ['nan', 'none', 'nat']:
+        return ''
+
+    return re.sub(r'\s+', ' ', texto)
+
+
+def valor_excel(valor):
+    """Convierte valores pandas/numpy a valores seguros para openpyxl."""
+    try:
+        if pd.isna(valor):
+            return None
+    except Exception:
+        pass
+
+    if isinstance(valor, pd.Timestamp):
+        return valor.to_pydatetime()
+
+    return valor
+
+
+def nombre_hoja_seguro(nombre):
+    """Limpia nombres de hojas para Excel."""
+    nombre = re.sub(r'[\/*?:\[\]]', '-', str(nombre))
+    return nombre[:31] if len(nombre) > 31 else nombre
