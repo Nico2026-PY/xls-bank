@@ -13,10 +13,10 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-# Versión v0.2.14: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
+# Versión v0.2.15: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
 
 APP_NAME = "XlsBank"
-APP_VERSION = "v0.2.14"
+APP_VERSION = "v0.2.15"
 APP_AUTHOR = "Nicolás Mellado"
 APP_COPYRIGHT = "Copyright © 2026 Nicolás Mellado. Todos los derechos reservados."
 

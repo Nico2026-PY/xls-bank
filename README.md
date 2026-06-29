@@ -1,6 +1,6 @@
 # XlsBank - Procesador Bancario
 
-Versión: `v0.2.15-dev`
+Versión: `v0.2.15`
 
 Aplicación de escritorio para Windows hecha en Python/Tkinter. Procesa extractos bancarios en Excel y CSV, detecta banco, empresa y cuenta, genera un Excel consolidado y muestra un informe final del proceso.
 
@@ -246,7 +246,7 @@ CHANGELOG.md
 
 Resumen:
 
-- `v0.2.15-dev`: limpieza del repositorio y orden de documentación/scripts.
+- `v0.2.15`: limpieza del repositorio y orden de documentación/scripts.
 - `v0.2.14`: preparación comercial, licencia propietaria y branding XlsBank.
 - `v0.2.13`: soporte para CSV nuevo de Mercado Pago.
 - `v0.2.12`: mejoras de launcher, seguridad y distribución.

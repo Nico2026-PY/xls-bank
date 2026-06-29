@@ -1,6 +1,6 @@
 # Changelog - XlsBank
 
-## v0.2.15-dev
+## v0.2.15
 
 ### Limpieza del repositorio
 - Se elimina `README.txt` desactualizado.
