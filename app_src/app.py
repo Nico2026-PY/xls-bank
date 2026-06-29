@@ -14,44 +14,14 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from xlsbank.config import ( APP_NAME, APP_VERSION, APP_AUTHOR, APP_COPYRIGHT, APP_SUBTITLE, CONFIG_EMPRESAS_ARCHIVO, BANCOS_CLAVES, COLUMNAS_SALIDA,)
+from xlsbank.utils import ruta_recurso, norm, limpiar_numero
+
 
 # Versión v0.2.15: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
 
 # ============================================================
 # PANTALLA DE CARGA ANIMADA
 # ============================================================
-
-def ruta_recurso(ruta_relativa):
-    """
-    Obtiene la ruta correcta al ejecutar desde Python o desde un .exe.
-
-    Soporta:
-    - Desarrollo: proyecto/assets
-    - Desarrollo desde app_src/app.py
-    - PyInstaller: carpeta temporal _MEIPASS
-    """
-    ruta_relativa = Path(ruta_relativa)
-
-    if hasattr(sys, '_MEIPASS'):
-        return Path(sys._MEIPASS) / ruta_relativa
-
-    archivo_actual = Path(__file__).resolve()
-    carpeta_app_src = archivo_actual.parent
-    carpeta_proyecto = carpeta_app_src.parent
-
-    posibles = [
-        carpeta_proyecto / ruta_relativa,
-        carpeta_app_src / ruta_relativa,
-        Path.cwd() / ruta_relativa,
-    ]
-
-    for ruta in posibles:
-        if ruta.exists():
-            return ruta
-
-    return carpeta_proyecto / ruta_relativa
-
-
 class PantallaCarga:
     """Muestra el GIF, una barra azul y el porcentaje antes de abrir la app."""
 
@@ -199,13 +169,6 @@ class PantallaCarga:
 
 EMPRESAS_CLAVES = {}
 
-def norm(txt):
-    txt = '' if txt is None else str(txt)
-    txt = txt.strip().lower()
-    txt = txt.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u').replace('ü','u')
-    return re.sub(r'\s+', ' ', txt)
-
-
 def rutas_posibles_config_empresas():
     """
     Devuelve ubicaciones posibles del archivo privado de empresas.
@@ -329,27 +292,6 @@ def cargar_empresas_claves():
 
 
 EMPRESAS_CLAVES = cargar_empresas_claves()
-
-
-def limpiar_numero(valor):
-    if valor is None or (isinstance(valor, float) and pd.isna(valor)):
-        return 0.0
-    if isinstance(valor, (int, float)):
-        return float(valor)
-    s = str(valor).strip()
-    if s == '' or s.lower() in ['nan', 'none']:
-        return 0.0
-    s = s.replace('$', '').replace(' ', '')
-    # Formato argentino: 1.234.567,89
-    if ',' in s and '.' in s:
-        s = s.replace('.', '').replace(',', '.')
-    elif ',' in s:
-        s = s.replace(',', '.')
-    try:
-        return float(s)
-    except Exception:
-        return 0.0
-
 
 def limpiar_fecha(valor):
     """
