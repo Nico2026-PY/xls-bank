@@ -13,7 +13,12 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-# Versión v0.2.11: informe final condicional + colores de estado mejorados + configuración privada de empresas.
+# Versión v0.2.14-dev: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
+
+APP_NAME = "XlsBank"
+APP_VERSION = "v0.2.14-dev"
+APP_AUTHOR = "Nicolás Mellado"
+APP_COPYRIGHT = "Copyright © 2026 Nicolás Mellado. Todos los derechos reservados."
 
 # ============================================================
 # PANTALLA DE CARGA ANIMADA
@@ -1831,7 +1836,7 @@ def generar_excel(movs, salida, archivos_procesados=None, advertencias=None):
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title('Procesador Bancario Profesional v0.2.11')
+        self.root.title(f'{APP_NAME} - Procesador Bancario {APP_VERSION}')
         self.archivos = []
         self.preview_data = []
         self.preview_counter = 0
@@ -1864,26 +1869,58 @@ class App:
         )
         panel.pack(fill='both', expand=True, padx=24, pady=24)
 
-        tk.Label(
-            panel,
-            text='🏦 Procesador Bancario por Empresa',
-            font=('Segoe UI', 22, 'bold'),
+        header_frame = tk.Frame(panel, bg=self.color_panel)
+        header_frame.pack(fill='x', padx=28, pady=(22, 4))
+
+        # Columna izquierda vacía para equilibrar el botón de la derecha
+        tk.Frame(
+            header_frame,
             bg=self.color_panel,
-            fg=self.color_texto
-        ).pack(pady=(22, 8))
+            width=130
+        ).pack(side='left')
+
+        header_center = tk.Frame(header_frame, bg=self.color_panel)
+        header_center.pack(side='left', expand=True, fill='x')
 
         tk.Label(
-            panel,
-            text=(
-                'Agregá los Excel bancarios, revisá la vista previa y generá el resumen final. '
-                'Por defecto el Excel se guarda en el Escritorio. Podés cambiar la carpeta de destino cuando lo necesites.'
-            ),
+            header_center,
+            text=f'🏦 {APP_NAME}',
+            font=('Segoe UI', 24, 'bold'),
             bg=self.color_panel,
-            fg=self.color_secundario,
-            wraplength=840,
-            justify='center',
-            font=('Segoe UI', 10)
-        ).pack(padx=25)
+            fg=self.color_texto
+        ).pack()
+
+        tk.Label(
+            header_center,
+            text='Procesador Bancario por Empresa',
+            font=('Segoe UI', 11, 'bold'),
+            bg=self.color_panel,
+            fg=self.color_secundario
+        ).pack(pady=(2, 4))
+
+        tk.Label(
+            header_center,
+            text=f'{APP_VERSION}  |  Software propietario',
+            font=('Segoe UI', 9, 'bold'),
+            bg=self.color_panel,
+            fg=self.color_secundario
+        ).pack()
+
+        tk.Button(
+            header_frame,
+            text='ℹ Acerca de',
+            command=self.mostrar_acerca_de,
+            width=15,
+            height=1,
+            bg='#EEF2F7',
+            fg=self.color_texto,
+            activebackground='#E2E8F0',
+            activeforeground=self.color_texto,
+            relief='solid',
+            bd=1,
+            cursor='hand2',
+            font=('Segoe UI', 9, 'bold')
+        ).pack(side='right', padx=(10, 0), anchor='n')
 
         estilo_boton = {
             'height': 2,
@@ -1899,7 +1936,7 @@ class App:
 
         tk.Button(
             barra_botones,
-            text='📂  1) Agregar Excel bancarios',
+            text='📂  1) Agregar archivos bancarios',
             command=self.seleccionar,
             width=31,
             bg=self.color_azul,
@@ -1929,7 +1966,7 @@ class App:
 
         tk.Button(
             barra_botones,
-            text='📊  2) Procesar y generar resumen',
+            text='📊  2) Generar resumen',
             command=self.procesar,
             width=31,
             bg=self.color_verde,
@@ -2007,7 +2044,7 @@ class App:
 
         self.lbl = tk.Label(
             panel,
-            text='Archivos seleccionados: 0',
+            text='Archivos: 0  |  OK: 0  |  Advertencias: 0  |  Errores: 0  |  Movimientos: 0',
             bg=self.color_panel,
             fg=self.color_secundario,
             font=('Segoe UI', 10, 'bold')
@@ -2074,6 +2111,79 @@ class App:
             font=('Segoe UI', 10)
         )
         self.estado.pack(padx=20, pady=(4, 16))
+
+    def mostrar_acerca_de(self):
+        ventana = tk.Toplevel(self.root)
+        ventana.title("Acerca de XlsBank")
+        ventana.configure(bg=self.color_fondo)
+        ventana.transient(self.root)
+        ventana.grab_set()
+
+        ancho = 520
+        alto = 390
+        self.root.update_idletasks()
+        x = self.root.winfo_x() + max(0, (self.root.winfo_width() - ancho) // 2)
+        y = self.root.winfo_y() + max(0, (self.root.winfo_height() - alto) // 2)
+        ventana.geometry(f'{ancho}x{alto}+{x}+{y}')
+        ventana.resizable(False, False)
+
+        contenedor = tk.Frame(
+            ventana,
+            bg=self.color_panel,
+            highlightthickness=1,
+            highlightbackground=self.color_borde
+        )
+        contenedor.pack(fill='both', expand=True, padx=18, pady=18)
+
+        tk.Label(
+            contenedor,
+            text=APP_NAME,
+            bg=self.color_panel,
+            fg=self.color_texto,
+            font=('Segoe UI', 24, 'bold')
+        ).pack(pady=(24, 2))
+
+        tk.Label(
+            contenedor,
+            text='Procesador Bancario',
+            bg=self.color_panel,
+            fg=self.color_secundario,
+            font=('Segoe UI', 12, 'bold')
+        ).pack(pady=(0, 14))
+
+        info = (
+            f'Versión: {APP_VERSION}\n\n'
+            f'Autor: {APP_AUTHOR}\n'
+            f'{APP_COPYRIGHT}\n\n'
+            'Software propietario.\n'
+            'Uso autorizado únicamente para clientes, equipos o usuarios habilitados.\n\n'
+            'Ver LICENSE.txt para condiciones completas.'
+        )
+
+        tk.Label(
+            contenedor,
+            text=info,
+            justify='center',
+            bg=self.color_panel,
+            fg=self.color_secundario,
+            wraplength=430,
+            font=('Segoe UI', 10)
+        ).pack(padx=24, pady=(0, 18))
+
+        tk.Button(
+            contenedor,
+            text='Cerrar',
+            command=ventana.destroy,
+            width=16,
+            height=2,
+            bg=self.color_azul,
+            fg='white',
+            activebackground='#1E40AF',
+            activeforeground='white',
+            relief='flat',
+            cursor='hand2',
+            font=('Segoe UI', 10, 'bold')
+        ).pack(pady=(0, 18))    
 
     def _configurar_estilos_ttk(self):
         estilo = ttk.Style(self.root)
@@ -2168,7 +2278,7 @@ class App:
 
     def _nombre_salida_default(self):
         """Nombre automático sugerido para el Excel final."""
-        return f'Resumen_Bancario_{datetime.now().strftime("%Y%m%d_%H%M")}.xlsx'
+        return f'XlsBank_Resumen_Bancario_{datetime.now().strftime("%Y%m%d_%H%M")}.xlsx'
 
     def usar_nombre_automatico(self):
         """Regenera el nombre automático sin cambiar la carpeta elegida."""
