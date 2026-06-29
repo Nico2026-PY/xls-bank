@@ -17,6 +17,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from xlsbank.config import ( APP_NAME, APP_VERSION, APP_AUTHOR, APP_COPYRIGHT, APP_SUBTITLE, CONFIG_EMPRESAS_ARCHIVO, BANCOS_CLAVES, COLUMNAS_SALIDA,)
 from xlsbank.utils import ( ruta_recurso, norm, limpiar_numero, limpiar_fecha, normalizar_fechas_movimientos, ordenar_por_fecha_real, limpiar_celda_texto, valor_excel, nombre_hoja_seguro, )
 from xlsbank.bancos.bpn import procesar_bpn
+from xlsbank.bancos.galicia import procesar_galicia
 
 # Versión v0.2.15: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
 
@@ -472,37 +473,6 @@ def encontrar_fila_encabezado(df_raw, nombres):
         if aciertos >= max(2, min(3, len(objetivos))):
             return i
     return None
-
-def procesar_galicia(path):
-    df = read_excel_any(path, header=0)
-    df.columns = [str(c).strip() for c in df.columns]
-    cuenta = 'GALICIA'
-    deb = df['Débitos'].apply(limpiar_numero) if 'Débitos' in df.columns else 0
-    cre = df['Créditos'].apply(limpiar_numero) if 'Créditos' in df.columns else 0
-    out = pd.DataFrame()
-    out['Cuenta'] = cuenta
-    out['Fecha Valor'] = df.get('Fecha', '')
-    out['Fecha Operación'] = df.get('Fecha', '')
-    out['Movimiento Fecha-Valor'] = ''
-    out['Descripción'] = df.get('Descripción', '')
-    # Detalle: une observación + cliente + leyendas si existen
-    partes = []
-    for c in ['Observaciones Cliente', 'Leyendas Adicionales 1', 'Leyendas Adicionales 2', 'Leyendas Adicionales 3']:
-        if c in df.columns:
-            partes.append(df[c].fillna('').astype(str))
-    if partes:
-        detalle = partes[0]
-        for p in partes[1:]: detalle = detalle.str.cat(p, sep=' ', na_rep='')
-    else:
-        detalle = ''
-    out['Detalle'] = detalle
-    out['Importe'] = cre - deb
-    out['Saldo'] = df['Saldo'].apply(limpiar_numero) if 'Saldo' in df.columns else 0
-    out['Categoria'] = ''  # Galicia no trae una columna real llamada Categoría; no se inventa.
-    out['Referencia'] = df.get('Número de Comprobante', '')
-    out['Etiquetas'] = ''
-    return out[COLUMNAS_SALIDA]
-
 
 def es_codigo_cuenta_patagonia(texto):
     """Detecta cuentas Patagonia tipo CC$ 385-123012668-000 o CA$ 385-..."""
@@ -995,7 +965,7 @@ def procesar_archivo(path):
     if banco == 'BPN':
         mov = procesar_bpn(path, read_excel_any)
     elif banco == 'GALICIA':
-        mov = procesar_galicia(path)
+        mov = procesar_galicia(path, read_excel_any)
     elif banco == 'PATAGONIA':
         mov = procesar_patagonia(path)
     elif banco == 'MERCADO_PAGO':
