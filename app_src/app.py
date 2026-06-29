@@ -4,6 +4,7 @@ import sys
 import json
 import pandas as pd
 import tkinter as tk
+
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 from pathlib import Path
@@ -12,13 +13,9 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
+from xlsbank.config import ( APP_NAME, APP_VERSION, APP_AUTHOR, APP_COPYRIGHT, APP_SUBTITLE, CONFIG_EMPRESAS_ARCHIVO, BANCOS_CLAVES, COLUMNAS_SALIDA,)
 
 # Versión v0.2.15: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
-
-APP_NAME = "XlsBank"
-APP_VERSION = "v0.2.15"
-APP_AUTHOR = "Nicolás Mellado"
-APP_COPYRIGHT = "Copyright © 2026 Nicolás Mellado. Todos los derechos reservados."
 
 # ============================================================
 # PANTALLA DE CARGA ANIMADA
@@ -200,29 +197,7 @@ class PantallaCarga:
 # Soporta estructura BPN, Galicia y Patagonia como los ejemplos enviados.
 # ============================================================
 
-BANCOS_CLAVES = {
-    'BPN': ['bpn', 'provincia del neuquen', 'neuquen'],
-    'GALICIA': ['galicia'],
-    'PATAGONIA': ['patagonia'],
-    'MERCADO_PAGO': ['mercado pago', 'mercadopago', 'mp '],
-    'NACION': ['nacion', 'bna'],
-    'MACRO': ['macro'],
-    'SANTANDER': ['santander'],
-    'BBVA': ['bbva', 'frances'],
-    'ICBC': ['icbc'],
-}
-
-# Las empresas NO se dejan escritas en el código para poder publicar
-# el repositorio sin exponer nombres reales, CUITs ni datos internos.
-# Se cargan desde un archivo privado externo: empresas_config.json
-CONFIG_EMPRESAS_ARCHIVO = 'empresas_config.json'
 EMPRESAS_CLAVES = {}
-
-COLUMNAS_SALIDA = [
-    'Cuenta', 'Fecha Valor', 'Fecha Operación', 'Movimiento Fecha-Valor',
-    'Descripción', 'Detalle', 'Importe', 'Saldo', 'Categoria', 'Referencia', 'Etiquetas'
-]
-
 
 def norm(txt):
     txt = '' if txt is None else str(txt)
