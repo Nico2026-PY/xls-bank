@@ -29,5 +29,5 @@ echo.
 echo Zip listo para subir a GitHub Releases:
 echo %CD%\release\%ZIP_NAME%
 echo.
-echo Recordá crear la Release con tag: v0.2.11
+echo Recordá crear la Release con tag: vx.x.x
 pause
