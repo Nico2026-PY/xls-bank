@@ -20,12 +20,34 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 # ============================================================
 
 def ruta_recurso(ruta_relativa):
-    """Obtiene la ruta correcta al ejecutar desde Python o desde un .exe."""
+    """
+    Obtiene la ruta correcta al ejecutar desde Python o desde un .exe.
+
+    Soporta:
+    - Desarrollo: proyecto/assets
+    - Desarrollo desde app_src/app.py
+    - PyInstaller: carpeta temporal _MEIPASS
+    """
+    ruta_relativa = Path(ruta_relativa)
+
     if hasattr(sys, '_MEIPASS'):
-        carpeta_base = Path(sys._MEIPASS)
-    else:
-        carpeta_base = Path(__file__).resolve().parent
-    return carpeta_base / ruta_relativa
+        return Path(sys._MEIPASS) / ruta_relativa
+
+    archivo_actual = Path(__file__).resolve()
+    carpeta_app_src = archivo_actual.parent
+    carpeta_proyecto = carpeta_app_src.parent
+
+    posibles = [
+        carpeta_proyecto / ruta_relativa,
+        carpeta_app_src / ruta_relativa,
+        Path.cwd() / ruta_relativa,
+    ]
+
+    for ruta in posibles:
+        if ruta.exists():
+            return ruta
+
+    return carpeta_proyecto / ruta_relativa
 
 
 class PantallaCarga:
@@ -574,12 +596,34 @@ def detectar_tipo_cuenta(cuenta, archivo):
 
 
 def read_excel_any(path, header=None):
-    """Lee .xlsx/.xls. Para .xls necesita xlrd instalado."""
+    """
+    Lee .xlsx, .xls y .csv.
+    Para CSV usa separador ; porque Mercado Pago exporta así.
+    """
     ext = Path(path).suffix.lower()
+
+    if ext == '.csv':
+        try:
+            return pd.read_csv(
+                path,
+                header=header,
+                dtype=object,
+                sep=';',
+                encoding='utf-8-sig'
+            )
+        except UnicodeDecodeError:
+            return pd.read_csv(
+                path,
+                header=header,
+                dtype=object,
+                sep=';',
+                encoding='latin1'
+            )
+
     if ext == '.xls':
         return pd.read_excel(path, header=header, dtype=object, engine='xlrd')
-    return pd.read_excel(path, header=header, dtype=object, engine='openpyxl')
 
+    return pd.read_excel(path, header=header, dtype=object, engine='openpyxl')
 
 def encontrar_fila_encabezado(df_raw, nombres):
     objetivos = [norm(x) for x in nombres]
@@ -883,22 +927,120 @@ def col_mp(df, nombre, default=''):
 
 def procesar_mercado_pago(path):
     """
-    Procesa reportes Excel de Mercado Pago Argentina.
-    Usa como importe principal el monto neto que impactó en dinero,
-    porque ya descuenta comisiones/retenciones.
+    Procesa reportes de Mercado Pago Argentina.
+
+    Soporta dos formatos:
+    1) Reporte viejo/en español:
+       FECHA DE APROBACIÓN, TIPO DE OPERACIÓN,
+       MONTO NETO DE LA OPERACIÓN QUE IMPACTÓ TU DINERO.
+
+    2) CSV nuevo de movimientos:
+       SOURCE_ID, PAYMENT_METHOD_TYPE, TRANSACTION_TYPE,
+       TRANSACTION_AMOUNT, TRANSACTION_DATE, FEE_AMOUNT,
+       SETTLEMENT_DATE, REAL_AMOUNT, TAXES_AMOUNT,
+       BUSINESS_UNIT, SUB_UNIT, MONEY_RELEASE_DATE.
     """
     df = read_excel_any(path, header=0)
     df.columns = [str(c).strip() for c in df.columns]
 
-    # Validación mínima para no confundir otro Excel con Mercado Pago
+    columnas = set(df.columns)
+
+    # ============================================================
+    # FORMATO NUEVO CSV MERCADO PAGO
+    # ============================================================
+    columnas_mp_csv = {
+        'SOURCE_ID',
+        'PAYMENT_METHOD_TYPE',
+        'TRANSACTION_TYPE',
+        'TRANSACTION_AMOUNT',
+        'TRANSACTION_DATE',
+        'REAL_AMOUNT'
+    }
+
+    if columnas_mp_csv.issubset(columnas):
+        fecha_operacion = pd.to_datetime(
+            df['TRANSACTION_DATE'],
+            errors='coerce',
+            utc=True
+        ).dt.tz_convert(None)
+
+        if 'SETTLEMENT_DATE' in df.columns:
+            fecha_valor = pd.to_datetime(
+                df['SETTLEMENT_DATE'],
+                errors='coerce',
+                utc=True
+            ).dt.tz_convert(None)
+        elif 'MONEY_RELEASE_DATE' in df.columns:
+            fecha_valor = pd.to_datetime(
+                df['MONEY_RELEASE_DATE'],
+                errors='coerce',
+                utc=True
+            ).dt.tz_convert(None)
+        else:
+            fecha_valor = fecha_operacion
+
+        importe_neto = df['REAL_AMOUNT'].apply(limpiar_numero)
+
+        tipo_operacion = df['TRANSACTION_TYPE'].fillna('').astype(str)
+        medio_pago = df['PAYMENT_METHOD_TYPE'].fillna('').astype(str)
+
+        if 'SUB_UNIT' in df.columns:
+            sub_unit = df['SUB_UNIT'].fillna('').astype(str)
+        else:
+            sub_unit = ''
+
+        out = pd.DataFrame()
+        out['Cuenta'] = 'Mercado Pago Argentina'
+        out['Fecha Valor'] = fecha_valor
+        out['Fecha Operación'] = fecha_operacion
+        out['Movimiento Fecha-Valor'] = ''
+
+        if 'SUB_UNIT' in df.columns:
+            sub_unit = df['SUB_UNIT'].fillna('').astype(str)
+            out['Descripción'] = tipo_operacion + ' - ' + medio_pago + ' - ' + sub_unit
+        else:
+            out['Descripción'] = tipo_operacion + ' - ' + medio_pago
+
+        detalle_partes = []
+
+        for c in ['BUSINESS_UNIT', 'SUB_UNIT', 'PAYMENT_METHOD_TYPE']:
+            if c in df.columns:
+                detalle_partes.append(df[c].fillna('').astype(str))
+
+        if detalle_partes:
+            detalle = detalle_partes[0]
+            for parte in detalle_partes[1:]:
+                detalle = detalle.str.cat(parte, sep=' | ', na_rep='')
+            out['Detalle'] = detalle
+        else:
+            out['Detalle'] = ''
+
+        out['Importe'] = importe_neto
+
+        # Mercado Pago no informa saldo de cuenta en este CSV.
+        out['Saldo'] = ''
+
+        out['Categoria'] = ''
+        out['Referencia'] = df['SOURCE_ID'] if 'SOURCE_ID' in df.columns else ''
+        out['Etiquetas'] = ''
+
+        return out[COLUMNAS_SALIDA]
+
+    # ============================================================
+    # FORMATO VIEJO / ESPAÑOL MERCADO PAGO
+    # ============================================================
     columnas_necesarias = [
         'FECHA DE APROBACIÓN',
         'TIPO DE OPERACIÓN',
         'MONTO NETO DE LA OPERACIÓN QUE IMPACTÓ TU DINERO'
     ]
+
     faltantes = [c for c in columnas_necesarias if c not in df.columns]
     if faltantes:
-        raise ValueError('No se reconoce formato Mercado Pago. Faltan columnas: ' + ', '.join(faltantes))
+        raise ValueError(
+            'No se reconoce formato Mercado Pago. Faltan columnas: '
+            + ', '.join(faltantes)
+        )
 
     fecha_aprobacion = pd.to_datetime(
         df['FECHA DE APROBACIÓN'],
@@ -907,29 +1049,36 @@ def procesar_mercado_pago(path):
     ).dt.tz_convert(None)
 
     fecha_liquidacion = (
-        pd.to_datetime(df['FECHA DE LIQUIDACIÓN DEL DINERO'], errors='coerce', utc=True).dt.tz_convert(None)
+        pd.to_datetime(
+            df['FECHA DE LIQUIDACIÓN DEL DINERO'],
+            errors='coerce',
+            utc=True
+        ).dt.tz_convert(None)
         if 'FECHA DE LIQUIDACIÓN DEL DINERO' in df.columns
         else fecha_aprobacion
     )
 
     importe_neto = df['MONTO NETO DE LA OPERACIÓN QUE IMPACTÓ TU DINERO'].apply(limpiar_numero)
 
-    cuenta = 'Mercado Pago Argentina'
-
     out = pd.DataFrame()
-    out['Cuenta'] = cuenta
+    out['Cuenta'] = 'Mercado Pago Argentina'
     out['Fecha Valor'] = fecha_liquidacion
     out['Fecha Operación'] = fecha_aprobacion
     out['Movimiento Fecha-Valor'] = ''
 
-    tipo_operacion = col_mp(df, 'TIPO DE OPERACIÓN', '').fillna('').astype(str)
-    detalle_venta = col_mp(df, 'DETALLE DE LA VENTA', '').fillna('').astype(str) if 'DETALLE DE LA VENTA' in df.columns else ''
-    out['Descripción'] = tipo_operacion + (' - ' + detalle_venta if isinstance(detalle_venta, str) else '')
+    tipo_operacion = df['TIPO DE OPERACIÓN'].fillna('').astype(str)
+
+    if 'DETALLE DE LA VENTA' in df.columns:
+        detalle_venta = df['DETALLE DE LA VENTA'].fillna('').astype(str)
+        out['Descripción'] = tipo_operacion + ' - ' + detalle_venta
+    else:
+        out['Descripción'] = tipo_operacion
 
     partes = []
     for c in ['PAGADOR', 'MEDIO DE PAGO', 'BANCO DE ORIGEN', 'NOMBRE DE LOCAL', 'CANAL DE VENTA']:
         if c in df.columns:
             partes.append(df[c].fillna('').astype(str))
+
     if partes:
         detalle = partes[0]
         for p in partes[1:]:
@@ -939,21 +1088,19 @@ def procesar_mercado_pago(path):
         out['Detalle'] = ''
 
     out['Importe'] = importe_neto
+    out['Saldo'] = ''
+    out['Categoria'] = ''
 
-    # Mercado Pago no trae saldo de cuenta en este reporte.
-    # Lo dejamos en 0 para no inventar saldos.
-    out['Saldo'] = ''  # Mercado Pago no trae saldo de cuenta; se deja vacío para no inventar 0.
+    if 'ID DE OPERACIÓN EN MERCADO PAGO' in df.columns:
+        out['Referencia'] = df['ID DE OPERACIÓN EN MERCADO PAGO']
+    elif 'NÚMERO DE IDENTIFICACIÓN' in df.columns:
+        out['Referencia'] = df['NÚMERO DE IDENTIFICACIÓN']
+    else:
+        out['Referencia'] = ''
 
-    out['Categoria'] = ''  # No se usa CANAL DE VENTA como categoría para no confundir.
-    out['Referencia'] = (
-        col_mp(df, 'ID DE OPERACIÓN EN MERCADO PAGO', '')
-        if 'ID DE OPERACIÓN EN MERCADO PAGO' in df.columns
-        else col_mp(df, 'NÚMERO DE IDENTIFICACIÓN', '')
-    )
-    out['Etiquetas'] = ''  # No se usa PLATAFORMA DE COBRO como etiqueta automática.
+    out['Etiquetas'] = ''
 
     return out[COLUMNAS_SALIDA]
-
 
 
 
@@ -2070,7 +2217,11 @@ class App:
     def seleccionar(self):
         archivos = filedialog.askopenfilenames(
             title='Agregar Excel bancarios',
-            filetypes=[('Excel', '*.xls *.xlsx')]
+            filetypes=[
+                ('Archivos bancarios', '*.xls *.xlsx *.csv'),
+                ('Excel', '*.xls *.xlsx'),
+                ('CSV', '*.csv')
+            ]
         )
 
         if not archivos:
@@ -2567,14 +2718,30 @@ if __name__ == '__main__':
     )
 
     try:
-        PantallaCarga(
-            root=root,
-            ruta_gif=ruta_gif,
-            al_terminar=lambda: iniciar_aplicacion(root),
-            ancho=760,
-            alto=720
-        )
+        if ruta_gif.exists():
+            PantallaCarga(
+                root=root,
+                ruta_gif=ruta_gif,
+                al_terminar=lambda: iniciar_aplicacion(root),
+                ancho=760,
+                alto=720
+            )
+        else:
+            iniciar_aplicacion(root)
+            messagebox.showwarning(
+                'Pantalla de carga',
+                f'No se encontró el GIF:\n{ruta_gif}'
+            )
+
     except Exception as error:
+        # Si falla el splash, no dejamos una ventana negra encima.
+        for ventana in root.winfo_children():
+            try:
+                if isinstance(ventana, tk.Toplevel):
+                    ventana.destroy()
+            except Exception:
+                pass
+
         iniciar_aplicacion(root)
         messagebox.showwarning(
             'Pantalla de carga',
