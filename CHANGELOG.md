@@ -1,4 +1,21 @@
 # Changelog - Procesador Bancario
+## v0.2.13
+
+- Se agrega soporte para CSV nuevo de Mercado Pago.
+- Se mejora la descripción de movimientos de Mercado Pago.
+- Se corrige la columna Cuenta para Mercado Pago.
+- Se mejora el ancho de columnas del Excel generado.
+
+## v0.2.12
+- Pantalla visual de actualización.
+- Mensajes de estado al buscar, descargar, instalar y abrir la app.
+- Modo offline: si no hay internet, intenta abrir la última versión instalada.
+- Evita descargar si la versión local ya está actualizada.
+- Soporte para canal estable / beta.
+- Backup antes de actualizar.
+- Validación básica del ZIP descargado.
+- Logs locales para diagnosticar errores.
+- Opción de reinstalar la última versión.
 
 ## v0.2.11
 - Informe final condicional.
