@@ -15,6 +15,7 @@ from openpyxl.utils import get_column_letter
 
 from xlsbank.config import ( APP_NAME, APP_VERSION, APP_AUTHOR, APP_COPYRIGHT, APP_SUBTITLE, CONFIG_EMPRESAS_ARCHIVO, BANCOS_CLAVES, COLUMNAS_SALIDA,)
 from xlsbank.utils import ( ruta_recurso, norm, normalizar_fechas_movimientos, ordenar_por_fecha_real, valor_excel, nombre_hoja_seguro, )
+from xlsbank.lectura import read_excel_any, encontrar_fila_encabezado
 
 from xlsbank.bancos.bpn import procesar_bpn
 from xlsbank.bancos.galicia import procesar_galicia
