@@ -1,6 +1,0 @@
-Poner acá tus assets reales:
-
-logo_girando_desde_cero_sin_fondo.gif
-icono_nuevo_app.ico
-
-Tu app v0.2.11 busca el GIF en assets/logo_girando_desde_cero_sin_fondo.gif.
