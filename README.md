@@ -175,7 +175,7 @@ Si antes se subieron datos reales al repo, borrarlos del archivo actual no siemp
 
 XlsBank es software propietario.
 
-Copyright © 2026 Nicolás. Todos los derechos reservados.
+Copyright © 2026 Nicolás Mellado. Todos los derechos reservados.
 
 El uso, copia, modificación, redistribución, publicación o comercialización
 del software, código fuente, ejecutables, launcher, scripts, documentación,

@@ -1,6 +1,6 @@
 XlsBank - Licencia de Software Propietario
 
-Copyright © 2026 Nicolás. Todos los derechos reservados.
+Copyright © 2026 Nicolás Mellado. Todos los derechos reservados.
 
 Este software, su código fuente, ejecutables, documentación, diseño, interfaz,
 marca, nombre, lógica de procesamiento, scripts, assets, instaladores,
