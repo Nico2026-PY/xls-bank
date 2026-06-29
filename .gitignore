@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.ipynb_checkpoints/
 
 # PyInstaller
 build/
@@ -14,6 +15,7 @@ Procesador_Bancario_Windows.zip
 launcher_dist/
 release/
 release/*.zip
+*.zip
 
 # Datos sensibles / salidas reales
 *.xlsx
@@ -27,6 +29,7 @@ release/*.zip
 # Windows
 Thumbs.db
 Desktop.ini
+.DS_Store
 
 # VS Code local
 .vscode/
