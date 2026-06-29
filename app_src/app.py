@@ -13,9 +13,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
+
 from xlsbank.config import ( APP_NAME, APP_VERSION, APP_AUTHOR, APP_COPYRIGHT, APP_SUBTITLE, CONFIG_EMPRESAS_ARCHIVO, BANCOS_CLAVES, COLUMNAS_SALIDA,)
 from xlsbank.utils import ( ruta_recurso, norm, limpiar_numero, limpiar_fecha, normalizar_fechas_movimientos, ordenar_por_fecha_real, limpiar_celda_texto, valor_excel, nombre_hoja_seguro, )
-
+from xlsbank.bancos.bpn import procesar_bpn
 
 # Versión v0.2.15: preparación comercial, licencia propietaria y pantalla Acerca de XlsBank.
 
@@ -471,26 +472,6 @@ def encontrar_fila_encabezado(df_raw, nombres):
         if aciertos >= max(2, min(3, len(objetivos))):
             return i
     return None
-
-
-def procesar_bpn(path):
-    df = read_excel_any(path, header=0)
-    df.columns = [str(c).strip() for c in df.columns]
-    cuenta = df['Cuenta'].dropna().iloc[0] if 'Cuenta' in df.columns and not df['Cuenta'].dropna().empty else ''
-    out = pd.DataFrame()
-    out['Cuenta'] = df.get('Cuenta', cuenta)
-    out['Fecha Valor'] = df.get('Fecha Valor', '')
-    out['Fecha Operación'] = df.get('Fecha Operación', '')
-    out['Movimiento Fecha-Valor'] = df.get('Movimiento Fecha-Valor', '')
-    out['Descripción'] = df.get('Descripción', '')
-    out['Detalle'] = df.get('Detalle', '')
-    out['Importe'] = df['Importe'].apply(limpiar_numero) if 'Importe' in df.columns else ''
-    out['Saldo'] = df['Saldo'].apply(limpiar_numero) if 'Saldo' in df.columns else ''
-    out['Categoria'] = df.get('Categoria', '')
-    out['Referencia'] = df.get('Referencia', '')
-    out['Etiquetas'] = df.get('Etiquetas', '')
-    return out[COLUMNAS_SALIDA]
-
 
 def procesar_galicia(path):
     df = read_excel_any(path, header=0)
@@ -1012,7 +993,7 @@ def procesar_archivo(path):
     empresa = detectar_empresa(path, raw_preview)
 
     if banco == 'BPN':
-        mov = procesar_bpn(path)
+        mov = procesar_bpn(path, read_excel_any)
     elif banco == 'GALICIA':
         mov = procesar_galicia(path)
     elif banco == 'PATAGONIA':
