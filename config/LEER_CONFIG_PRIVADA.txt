@@ -1,12 +1,46 @@
-CONFIGURACIÓN PRIVADA DE EMPRESAS
+CONFIGURACIÓN PRIVADA DE EMPRESAS - XlsBank
 
-1) Copiá empresas_config.example.json.
-2) Renombralo como empresas_config.json.
-3) Cargá tus nombres/alias reales.
-4) NO lo subas a GitHub.
+Este archivo explica cómo crear la configuración privada de empresas.
+
+El archivo real empresas_config.json NO debe subirse a GitHub.
+Solo debe quedar en cada PC autorizada.
+
+Pasos recomendados:
+
+1) Copiar el archivo de ejemplo:
+   config/empresas_config.example.json
+
+2) Renombrar la copia como:
+   empresas_config.json
+
+3) Cargar nombres, alias o palabras clave de cada empresa.
+
+4) Guardar el archivo real en la PC donde se usa la app.
 
 Ubicación recomendada en Windows:
+
 %APPDATA%\Procesador_Bancario\empresas_config.json
 
-También podés usar una variable de entorno:
+También se puede indicar una ruta específica con variable de entorno:
+
 setx BANCOS_EMPRESAS_CONFIG "C:\RutaPrivada\empresas_config.json"
+
+Formato recomendado:
+
+{
+  "empresas": {
+    "EMPRESA_1": {
+      "claves": ["empresa 1", "razon social ejemplo", "alias archivo"],
+      "cuit": "opcional-no-subir-cuit-real-al-repo"
+    },
+    "EMPRESA_2": ["empresa 2", "otro alias"]
+  }
+}
+
+Importante:
+
+- No subir empresas_config.json real al repositorio.
+- No subir nombres reales de empresas si el repo es público.
+- No subir CUITs reales.
+- No subir extractos bancarios, Excel, CSV, PDF, saldos o reportes reales.
+- Usar config/empresas_config.example.json solo como ejemplo público.
