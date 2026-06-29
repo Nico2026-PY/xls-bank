@@ -925,20 +925,63 @@ def col_mp(df, nombre, default=''):
     return default
 
 
+def describir_tipo_mp(transaction_type):
+    """Traduce tipos de operación de Mercado Pago a textos más claros."""
+    t = norm(transaction_type)
+
+    traducciones = {
+        'settlement': 'Liquidación',
+        'payment': 'Pago',
+        'refund': 'Devolución',
+        'chargeback': 'Contracargo',
+        'withdrawal': 'Retiro de dinero',
+        'payout': 'Retiro de dinero',
+        'transfer': 'Transferencia',
+    }
+
+    return traducciones.get(t, str(transaction_type).strip() or 'Movimiento')
+
+
+def describir_medio_mp(payment_method_type):
+    """Traduce medios de pago de Mercado Pago."""
+    t = norm(payment_method_type)
+
+    traducciones = {
+        'available_money': 'Dinero disponible',
+        'account_money': 'Dinero en cuenta',
+        'debit_card': 'Tarjeta débito',
+        'credit_card': 'Tarjeta crédito',
+        'bank_transfer': 'Transferencia bancaria',
+        'ticket': 'Efectivo / cupón',
+        'digital_currency': 'Moneda digital',
+    }
+
+    return traducciones.get(t, str(payment_method_type).strip() or '')
+
+
+def describir_subunidad_mp(sub_unit):
+    """Traduce subunidad/canal de Mercado Pago."""
+    t = norm(sub_unit)
+
+    traducciones = {
+        'qr': 'QR',
+        'point': 'Point',
+        'checkout': 'Checkout',
+        'available_money': 'Dinero disponible',
+        'debit_card': 'Tarjeta débito',
+        'credit_card': 'Tarjeta crédito',
+        'bank_transfer': 'Transferencia bancaria',
+    }
+
+    return traducciones.get(t, str(sub_unit).strip() or '')
+
 def procesar_mercado_pago(path):
     """
     Procesa reportes de Mercado Pago Argentina.
 
-    Soporta dos formatos:
-    1) Reporte viejo/en español:
-       FECHA DE APROBACIÓN, TIPO DE OPERACIÓN,
-       MONTO NETO DE LA OPERACIÓN QUE IMPACTÓ TU DINERO.
-
-    2) CSV nuevo de movimientos:
-       SOURCE_ID, PAYMENT_METHOD_TYPE, TRANSACTION_TYPE,
-       TRANSACTION_AMOUNT, TRANSACTION_DATE, FEE_AMOUNT,
-       SETTLEMENT_DATE, REAL_AMOUNT, TAXES_AMOUNT,
-       BUSINESS_UNIT, SUB_UNIT, MONEY_RELEASE_DATE.
+    Soporta:
+    1) Formato viejo/en español.
+    2) CSV nuevo con columnas SOURCE_ID, TRANSACTION_TYPE, REAL_AMOUNT, etc.
     """
     df = read_excel_any(path, header=0)
     df.columns = [str(c).strip() for c in df.columns]
@@ -958,6 +1001,8 @@ def procesar_mercado_pago(path):
     }
 
     if columnas_mp_csv.issubset(columnas):
+        out = pd.DataFrame(index=df.index)
+
         fecha_operacion = pd.to_datetime(
             df['TRANSACTION_DATE'],
             errors='coerce',
@@ -981,25 +1026,27 @@ def procesar_mercado_pago(path):
 
         importe_neto = df['REAL_AMOUNT'].apply(limpiar_numero)
 
-        tipo_operacion = df['TRANSACTION_TYPE'].fillna('').astype(str)
-        medio_pago = df['PAYMENT_METHOD_TYPE'].fillna('').astype(str)
+        tipo_raw = df['TRANSACTION_TYPE'].fillna('').astype(str)
+        medio_raw = df['PAYMENT_METHOD_TYPE'].fillna('').astype(str)
+
+        tipo_claro = tipo_raw.apply(describir_tipo_mp)
+        medio_claro = medio_raw.apply(describir_medio_mp)
 
         if 'SUB_UNIT' in df.columns:
-            sub_unit = df['SUB_UNIT'].fillna('').astype(str)
+            sub_raw = df['SUB_UNIT'].fillna('').astype(str)
+            sub_claro = sub_raw.apply(describir_subunidad_mp)
         else:
-            sub_unit = ''
+            sub_raw = pd.Series('', index=df.index)
+            sub_claro = pd.Series('', index=df.index)
 
-        out = pd.DataFrame()
-        out['Cuenta'] = 'Mercado Pago Argentina'
-        out['Fecha Valor'] = fecha_valor
-        out['Fecha Operación'] = fecha_operacion
-        out['Movimiento Fecha-Valor'] = ''
+        descripcion = tipo_claro
 
-        if 'SUB_UNIT' in df.columns:
-            sub_unit = df['SUB_UNIT'].fillna('').astype(str)
-            out['Descripción'] = tipo_operacion + ' - ' + medio_pago + ' - ' + sub_unit
-        else:
-            out['Descripción'] = tipo_operacion + ' - ' + medio_pago
+        for extra in [medio_claro, sub_claro]:
+            extra = extra.fillna('').astype(str).str.strip()
+            descripcion = descripcion.where(
+                extra.eq(''),
+                descripcion + ' - ' + extra
+            )
 
         detalle_partes = []
 
@@ -1011,17 +1058,22 @@ def procesar_mercado_pago(path):
             detalle = detalle_partes[0]
             for parte in detalle_partes[1:]:
                 detalle = detalle.str.cat(parte, sep=' | ', na_rep='')
-            out['Detalle'] = detalle
         else:
-            out['Detalle'] = ''
+            detalle = pd.Series('', index=df.index)
 
+        out['Cuenta'] = 'Mercado Pago Argentina'
+        out['Fecha Valor'] = fecha_valor
+        out['Fecha Operación'] = fecha_operacion
+        out['Movimiento Fecha-Valor'] = ''
+        out['Descripción'] = descripcion
+        out['Detalle'] = detalle
         out['Importe'] = importe_neto
 
         # Mercado Pago no informa saldo de cuenta en este CSV.
         out['Saldo'] = ''
 
         out['Categoria'] = ''
-        out['Referencia'] = df['SOURCE_ID'] if 'SOURCE_ID' in df.columns else ''
+        out['Referencia'] = df['SOURCE_ID'].fillna('').astype(str)
         out['Etiquetas'] = ''
 
         return out[COLUMNAS_SALIDA]
@@ -1042,6 +1094,8 @@ def procesar_mercado_pago(path):
             + ', '.join(faltantes)
         )
 
+    out = pd.DataFrame(index=df.index)
+
     fecha_aprobacion = pd.to_datetime(
         df['FECHA DE APROBACIÓN'],
         errors='coerce',
@@ -1060,19 +1114,13 @@ def procesar_mercado_pago(path):
 
     importe_neto = df['MONTO NETO DE LA OPERACIÓN QUE IMPACTÓ TU DINERO'].apply(limpiar_numero)
 
-    out = pd.DataFrame()
-    out['Cuenta'] = 'Mercado Pago Argentina'
-    out['Fecha Valor'] = fecha_liquidacion
-    out['Fecha Operación'] = fecha_aprobacion
-    out['Movimiento Fecha-Valor'] = ''
-
     tipo_operacion = df['TIPO DE OPERACIÓN'].fillna('').astype(str)
 
     if 'DETALLE DE LA VENTA' in df.columns:
         detalle_venta = df['DETALLE DE LA VENTA'].fillna('').astype(str)
-        out['Descripción'] = tipo_operacion + ' - ' + detalle_venta
+        descripcion = tipo_operacion + ' - ' + detalle_venta
     else:
-        out['Descripción'] = tipo_operacion
+        descripcion = tipo_operacion
 
     partes = []
     for c in ['PAGADOR', 'MEDIO DE PAGO', 'BANCO DE ORIGEN', 'NOMBRE DE LOCAL', 'CANAL DE VENTA']:
@@ -1083,25 +1131,29 @@ def procesar_mercado_pago(path):
         detalle = partes[0]
         for p in partes[1:]:
             detalle = detalle.str.cat(p, sep=' | ', na_rep='')
-        out['Detalle'] = detalle
     else:
-        out['Detalle'] = ''
+        detalle = pd.Series('', index=df.index)
 
+    if 'ID DE OPERACIÓN EN MERCADO PAGO' in df.columns:
+        referencia = df['ID DE OPERACIÓN EN MERCADO PAGO'].fillna('').astype(str)
+    elif 'NÚMERO DE IDENTIFICACIÓN' in df.columns:
+        referencia = df['NÚMERO DE IDENTIFICACIÓN'].fillna('').astype(str)
+    else:
+        referencia = pd.Series('', index=df.index)
+
+    out['Cuenta'] = 'Mercado Pago Argentina'
+    out['Fecha Valor'] = fecha_liquidacion
+    out['Fecha Operación'] = fecha_aprobacion
+    out['Movimiento Fecha-Valor'] = ''
+    out['Descripción'] = descripcion
+    out['Detalle'] = detalle
     out['Importe'] = importe_neto
     out['Saldo'] = ''
     out['Categoria'] = ''
-
-    if 'ID DE OPERACIÓN EN MERCADO PAGO' in df.columns:
-        out['Referencia'] = df['ID DE OPERACIÓN EN MERCADO PAGO']
-    elif 'NÚMERO DE IDENTIFICACIÓN' in df.columns:
-        out['Referencia'] = df['NÚMERO DE IDENTIFICACIÓN']
-    else:
-        out['Referencia'] = ''
-
+    out['Referencia'] = referencia
     out['Etiquetas'] = ''
 
     return out[COLUMNAS_SALIDA]
-
 
 
 def asegurar_salida_conservadora(mov, banco):
@@ -1384,7 +1436,7 @@ def analizar_archivo_previo(path):
 
 def estilo_base(ws):
     ws.sheet_view.showGridLines = False
-    for col, width in {'A':18,'B':16,'C':16,'D':22,'E':28,'F':42,'G':15,'H':15,'I':18,'J':18,'K':14}.items():
+    for col, width in {'A':24,'B':16,'C':16,'D':22,'E':38,'F':42,'G':15,'H':15,'I':18,'J':18,'K':14}.items():
         ws.column_dimensions[col].width = width
 
 
