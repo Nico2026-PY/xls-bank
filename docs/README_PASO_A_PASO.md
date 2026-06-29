@@ -1,105 +1,255 @@
-# Procesador Bancario - Actualización profesional por GitHub Releases
+# XlsBank - Guía paso a paso para publicar actualizaciones
 
-Esta carpeta ya trae tu app en:
+Esta guía explica cómo trabajar, compilar y publicar nuevas versiones de XlsBank usando GitHub Releases y el launcher actualizador.
+
+La app principal está en:
 
 ```txt
 app_src/app.py
 ```
 
-La versión base preparada es:
+La versión actual del proyecto se define en:
 
 ```txt
-v0.2.11
-```
-
-## 1. Qué archivos se suben a GitHub
-
-Subí al repositorio estos archivos/carpetas:
-
-```txt
-app_src/
-assets/
-.github/
-requirements.txt
-launcher.py
-build_app.bat
-build_launcher.bat
-crear_zip_release.bat
-instalar_launcher_en_esta_pc.bat
 VERSION.txt
-.gitignore
-README_PASO_A_PASO.md
 ```
 
-No subas extractos bancarios, PDFs, Excel reales, CSV reales ni datos de clientes.
+También debe coincidir con la constante `APP_VERSION` dentro de `app_src/app.py`.
 
-## 2. Configurar el launcher
+---
 
-Abrí `launcher.py` y cambiá:
+## 1. Estructura principal del proyecto
+
+```txt
+.github/workflows/                      Workflows de GitHub Actions
+app_src/app.py                          App principal
+assets/                                 Íconos, logos y splash
+config/empresas_config.example.json     Ejemplo público sin datos reales
+docs/                                   Documentación secundaria
+scripts/                                Scripts útiles de instalación
+scripts/legacy/                         Scripts históricos
+launcher.py                             Actualizador por GitHub Releases
+
+README.md                               Documentación principal
+CHANGELOG.md                            Historial de cambios
+LICENSE.txt                             Licencia propietaria
+VERSION.txt                             Versión actual
+requirements.txt                        Dependencias Python
+
+build_app.bat                           Compila la app principal
+build_launcher.bat                      Compila el launcher
+crear_zip_release.bat                   Crea el ZIP para GitHub Release
+```
+
+No subir extractos bancarios, PDFs, Excel reales, CSV reales, reportes generados, datos de clientes, CUITs, tokens ni configuraciones privadas reales.
+
+---
+
+## 2. Archivos importantes
+
+```txt
+app_src/app.py                          Código principal de XlsBank
+launcher.py                             Launcher / actualizador
+requirements.txt                        Dependencias Python
+VERSION.txt                             Versión actual
+CHANGELOG.md                            Historial de versiones
+README.md                               Documentación principal
+LICENSE.txt                             Licencia propietaria
+build_app.bat                           Compila la app principal
+build_launcher.bat                      Compila el launcher
+crear_zip_release.bat                   Crea el ZIP para GitHub Release
+scripts/instalar_launcher_en_esta_pc.bat
+scripts/instalar_config_privada_en_esta_pc.bat
+config/empresas_config.example.json
+assets/
+```
+
+---
+
+## 3. Configurar el launcher
+
+Abrir `launcher.py` y revisar:
 
 ```py
 GITHUB_OWNER = "Nico2026-PY"
 GITHUB_REPO = "xls-bank"
+```
+
+El launcher busca la última release publicada en GitHub y descarga el archivo:
+
+```txt
+Procesador_Bancario_Windows.zip
+```
+
+Por compatibilidad, se mantienen estos nombres internos:
+
+```txt
+Procesador_Bancario.exe
+Procesador_Bancario_Windows.zip
+Abrir_Procesador_Bancario.exe
+```
+
+Aunque el branding visible de la app sea XlsBank.
+
+---
+
+## 4. Assets de la app
+
+La app usa estos archivos:
+
+```txt
+assets/logo_girando_desde_cero_sin_fondo.gif
+assets/icono_nuevo_app.ico
+```
+
+El GIF se usa en la pantalla de carga.
+
+El `.ico` se usa como ícono de ventana y ejecutable.
+
+No borrar esos archivos salvo que también se actualicen las rutas correspondientes en `app_src/app.py` y/o scripts de compilación.
+
+---
+
+## 5. Ejecutar en desarrollo
+
+Instalar dependencias:
+
+```bat
+python -m pip install -r requirements.txt
+```
+
+Ejecutar la app:
+
+```bat
+python app_src\app.py
+```
+
+Antes de publicar una versión, probar que:
+
+```txt
+- La app abre correctamente.
+- Muestra el nombre XlsBank.
+- Muestra la versión correcta.
+- Agrega archivos Excel y CSV.
+- Procesa los bancos soportados.
+- Genera el Excel final.
+- Abre la ventana “Acerca de XlsBank”.
+```
+
+---
+
+## 6. Flujo de ramas recomendado
+
+La rama `main` debe quedar como versión estable publicada.
+
+Las mejoras se trabajan en ramas `dev`.
+
+Ejemplo:
+
+```bat
+git checkout main
+git pull
+git checkout -b dev-v0.2.15-limpieza-repo
+git push -u origin dev-v0.2.15-limpieza-repo
+```
+
+Mientras la versión está en desarrollo, puede figurar como:
+
+```txt
+v0.2.15-dev
+```
+
+Cuando se prepara para release estable, se cambia a:
+
+```txt
+v0.2.15
+```
+
+---
+
+## 7. Preparar una versión estable
+
+Antes de pasar una rama `dev` a `main`, revisar:
+
+```txt
+VERSION.txt
+app_src/app.py       APP_VERSION
+CHANGELOG.md
+README.md
 ```
 
 Ejemplo:
 
-```py
-GITHUB_OWNER = "Nico2026-PY"
-GITHUB_REPO = "xls-bank"
-```
-
-## 3. Assets de tu app
-
-Tu app busca el GIF en:
-
 ```txt
-assets/logo_girando_desde_cero_sin_fondo.gif
+v0.2.15-dev   → durante desarrollo
+v0.2.15       → antes de publicar release estable
 ```
 
-Ponelo dentro de la carpeta `assets/`.
+Después guardar:
 
-Opcional para el ícono del exe:
-
-```txt
-assets/icono_nuevo_app.ico
+```bat
+git status
+git add .
+git commit -m "Prepara version estable v0.2.15"
+git push
 ```
 
-Si el GIF no está, tu app igual abre, pero muestra una advertencia de pantalla de carga.
+---
 
-## 4. Compilar la app principal
+## 8. Pasar cambios a main
 
-Ejecutá:
+Cuando la rama dev esté probada:
+
+```bat
+git checkout main
+git pull
+git merge dev-v0.2.15-limpieza-repo
+git push
+```
+
+Desde ese momento, `main` queda actualizado.
+
+---
+
+## 9. Compilar la app principal
+
+Desde `main`, ejecutar:
 
 ```bat
 build_app.bat
 ```
 
-Esto genera:
+Salida esperada:
 
 ```txt
-dist/Procesador_Bancario/Procesador_Bancario.exe
+dist\Procesador_Bancario\Procesador_Bancario.exe
 ```
 
-Se usa `--onedir`, que es lo más recomendable para apps con `pandas`, `openpyxl`, `PIL` y assets.
+Probar el `.exe` antes de crear el ZIP.
 
-## 5. Crear el ZIP para GitHub Release
+---
 
-Ejecutá:
+## 10. Crear el ZIP para GitHub Release
+
+Ejecutar:
 
 ```bat
 crear_zip_release.bat
 ```
 
-Esto genera:
+Salida esperada:
 
 ```txt
-release/Procesador_Bancario_Windows.zip
+release\Procesador_Bancario_Windows.zip
 ```
 
-Ese archivo es el que subís como asset de la Release.
+Ese archivo es el asset que se sube a GitHub Release.
 
-## 6. Crear la Release en GitHub
+No cambiar el nombre del ZIP salvo que también se actualice el launcher.
+
+---
+
+## 11. Crear la Release en GitHub
 
 En GitHub:
 
@@ -107,119 +257,90 @@ En GitHub:
 Repository → Releases → Draft a new release
 ```
 
-Usá:
+Usar:
 
 ```txt
-Tag: v0.2.11
-Title: Procesador Bancario v0.2.11
+Tag: v0.2.15
+Title: XlsBank - Procesador Bancario v0.2.15
 Asset: Procesador_Bancario_Windows.zip
 ```
 
-Publicás la Release.
+Publicar la release como `Latest`.
 
-## 7. Compilar el launcher
+---
 
-Ejecutá:
+## 12. Compilar el launcher
+
+El launcher no necesita recompilarse en cada versión de la app.
+
+Solo se recompila si se cambia `launcher.py`.
+
+Para compilarlo:
 
 ```bat
 build_launcher.bat
 ```
 
-Esto genera:
+Salida esperada:
 
 ```txt
-dist/Abrir_Procesador_Bancario.exe
+dist\Abrir_Procesador_Bancario.exe
 ```
 
-Ese es el único `.exe` que instalás una vez en cada computadora.
+Ese es el ejecutable que se instala una vez en cada PC.
 
-## 8. Instalar launcher en una PC
+---
 
-En cada compu, copiás esta carpeta o solo el launcher compilado y ejecutás:
+## 13. Instalar launcher en una PC
 
-```bat
-instalar_launcher_en_esta_pc.bat
-```
-
-Crea un acceso directo en el escritorio llamado:
+El script útil está en:
 
 ```txt
-Procesador Bancario
+scripts\instalar_launcher_en_esta_pc.bat
 ```
 
-Cuando el usuario abre ese acceso directo:
+El usuario final debería usar:
 
 ```txt
-1. Busca la última Release en GitHub.
+Abrir_Procesador_Bancario.exe
+```
+
+Cuando se abre el launcher:
+
+```txt
+1. Busca la última release en GitHub.
 2. Descarga Procesador_Bancario_Windows.zip.
 3. Instala la versión en %LOCALAPPDATA%.
 4. Abre Procesador_Bancario.exe.
 ```
 
-## 9. Cómo actualizar en el futuro
+---
 
-Cada vez que hagas cambios:
+## 14. Dónde queda instalado en cada PC
 
-```txt
-1. Modificás app_src/app.py.
-2. Cambiás VERSION.txt, por ejemplo a v0.2.12.
-3. Ejecutás build_app.bat.
-4. Ejecutás crear_zip_release.bat.
-5. Creás una nueva Release en GitHub con tag v0.2.12.
-6. Subís Procesador_Bancario_Windows.zip.
-```
-
-Las otras PCs se actualizan solas la próxima vez que abran el launcher.
-
-## 10. Repo privado
-
-Si el repositorio es privado, cada PC necesita un token en variable de entorno:
-
-```bat
-setx GITHUB_TOKEN "TU_TOKEN"
-```
-
-Después cerrá y abrí Windows o al menos cerrá la sesión para que tome la variable.
-
-## 11. Dónde queda instalado en cada PC
-
-La app queda acá:
+La app queda en:
 
 ```txt
-%LOCALAPPDATA%\Procesador_Bancario\versions\v0.2.11\
+%LOCALAPPDATA%\Procesador_Bancario\
 ```
 
-El launcher guarda logs acá:
+Las versiones quedan dentro de:
+
+```txt
+%LOCALAPPDATA%\Procesador_Bancario\versions\
+```
+
+El launcher guarda logs en:
 
 ```txt
 %LOCALAPPDATA%\Procesador_Bancario\launcher.log
 ```
 
-
 ---
 
-## README principal actualizado
+## 15. Configuración privada de empresas
 
-Además de este paso a paso, el proyecto ahora incluye:
-
-```txt
-README.md
-README.txt
-CHANGELOG.md
-requirements.txt
-assets/icono_nuevo_app.ico
-assets/logo_girando_desde_cero_sin_fondo.gif
-assets/logo_girando_3d_corregido.gif
-```
-
-El `README.md` documenta todas las mejoras acumuladas hasta `v0.2.11`, bancos soportados, formato esperado, reglas de seguridad de datos, assets, compilación y publicación por GitHub Releases.
-
-
----
-
-## CONFIGURACIÓN PRIVADA DE EMPRESAS
-
-Para publicar el repo sin exponer datos internos, las empresas reales ya no quedan escritas en `app.py`.
+Para publicar el repo sin exponer datos internos, las empresas reales no quedan escritas en `app.py`.
 
 Crear este archivo en cada PC:
 
@@ -227,15 +348,76 @@ Crear este archivo en cada PC:
 %APPDATA%\Procesador_Bancario\empresas_config.json
 ```
 
-Usar este formato:
+También se puede usar variable de entorno:
+
+```bat
+setx BANCOS_EMPRESAS_CONFIG "C:\RutaPrivada\empresas_config.json"
+```
+
+Formato recomendado:
 
 ```json
 {
   "empresas": {
-    "EMPRESA_1": ["alias archivo", "razon social"],
-    "EMPRESA_2": {"claves": ["otro alias"], "cuit": "opcional"}
+    "EMPRESA_1": {
+      "claves": ["alias archivo", "razon social"],
+      "cuit": "opcional"
+    },
+    "EMPRESA_2": ["otro alias", "otra razon social"]
   }
 }
 ```
 
-No subir `empresas_config.json` a GitHub. El repo solo debe tener `config/empresas_config.example.json`.
+No subir `empresas_config.json` a GitHub.
+
+El repo solo debe tener:
+
+```txt
+config/empresas_config.example.json
+```
+
+---
+
+## 16. Repo privado
+
+Si en el futuro el repositorio pasa a privado, cada PC necesitaría autorización para descargar releases privadas.
+
+Una opción sería usar token en variable de entorno:
+
+```bat
+setx GITHUB_TOKEN "TU_TOKEN"
+```
+
+Pero para uso comercial conviene revisar una solución más segura antes de entregar a clientes.
+
+---
+
+## 17. Seguridad
+
+No subir al repositorio:
+
+```txt
+- Extractos bancarios reales.
+- Excel reales.
+- CSV reales.
+- PDFs reales.
+- CUITs reales.
+- Nombres reales de empresas/clientes.
+- Saldos o movimientos reales.
+- Tokens o claves privadas.
+- empresas_config.json real.
+- ZIPs de release.
+- Carpetas build/, dist/ o release/.
+```
+
+---
+
+## 18. Licencia
+
+XlsBank es software propietario.
+
+Ver condiciones completas en:
+
+```txt
+LICENSE.txt
+```
