@@ -1,4 +1,28 @@
 # Changelog - Procesador Bancario
+## v0.2.14-dev
+
+### Preparación comercial
+- Se agrega `LICENSE.txt` con licencia propietaria para preparar XlsBank como producto comercial.
+- Se documenta que el uso, copia, modificación, redistribución y comercialización requieren autorización expresa del autor.
+- Se agrega sección de licencia en `README.md`.
+- Se prepara la app para incluir una pantalla “Acerca de XlsBank”.
+- Se agrega texto de copyright y software propietario dentro de la documentación.
+
+### Seguridad y propiedad intelectual
+- Se refuerza la separación entre código fuente, ejecutables, releases y datos privados locales.
+- Se aclara que archivos reales de bancos, empresas, CUITs, PDFs, Excels, CSVs, tokens o configuraciones privadas no deben subirse al repositorio.
+- Se mantiene el modelo de configuración privada mediante `empresas_config.json`.
+
+### Compatibilidad
+- No se cambia el nombre del ejecutable principal.
+- No se cambia el nombre del ZIP de release.
+- No se modifica el launcher.
+- Se mantiene compatibilidad con `Procesador_Bancario.exe` y `Procesador_Bancario_Windows.zip`.
+
+### Estado
+- Versión de desarrollo.
+- No publicada todavía como release estable.
+
 ## v0.2.13
 
 - Se agrega soporte para CSV nuevo de Mercado Pago.

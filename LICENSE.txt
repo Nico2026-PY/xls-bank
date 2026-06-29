@@ -1,0 +1,39 @@
+XlsBank - Licencia de Software Propietario
+
+Copyright © 2026 Nicolás. Todos los derechos reservados.
+
+Este software, su código fuente, ejecutables, documentación, diseño, interfaz,
+marca, nombre, lógica de procesamiento, scripts, assets, instaladores,
+actualizadores y archivos asociados son propiedad de su autor.
+
+Se concede al usuario o cliente una licencia limitada, no exclusiva,
+no transferible y revocable para usar XlsBank únicamente en los equipos,
+usuarios, empresas o entornos autorizados expresamente por el autor.
+
+No está permitido, salvo autorización escrita del autor:
+
+- copiar, vender, revender, sublicenciar o redistribuir el software;
+- compartir el ejecutable, instalador, launcher o código fuente con terceros no autorizados;
+- modificar el software o crear versiones derivadas para terceros;
+- publicar el código fuente o partes del mismo;
+- usar el código fuente en otros proyectos propios o de terceros;
+- remover avisos de copyright, marca, versión o autoría;
+- aplicar ingeniería inversa, descompilar o intentar extraer lógica interna;
+- usar configuraciones, claves, archivos privados o datos de otros clientes;
+- subir al repositorio archivos reales de bancos, clientes, empresas, CUITs,
+  PDFs, Excels, CSVs, credenciales, tokens o cualquier información sensible.
+
+XlsBank se entrega "tal cual", sin garantía de funcionamiento absoluto.
+El autor no será responsable por pérdidas de información, errores de carga,
+uso incorrecto, resultados mal interpretados, fallas de terceros,
+interrupciones de internet, GitHub, Windows, Excel, bancos, sistemas externos
+u otros servicios utilizados por el usuario.
+
+El soporte, mantenimiento, instalación, configuración, actualizaciones,
+nuevas funciones, adaptaciones por cliente y cambios personalizados podrán
+estar sujetos a contratación adicional.
+
+El uso de XlsBank implica la aceptación de estas condiciones.
+
+Para solicitar autorización de uso, soporte, mantenimiento o modificaciones,
+contactar al autor.

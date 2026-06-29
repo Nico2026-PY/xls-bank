@@ -170,3 +170,18 @@ Si antes se subieron datos reales al repo, borrarlos del archivo actual no siemp
 - Archivos con error omitidos e informados.
 - Reglas conservadoras para no inventar categoría, etiquetas ni saldos.
 - Carga privada de empresas desde `empresas_config.json` para repositorios públicos.
+
+## Licencia
+
+XlsBank es software propietario.
+
+Copyright © 2026 Nicolás. Todos los derechos reservados.
+
+El uso, copia, modificación, redistribución, publicación o comercialización
+del software, código fuente, ejecutables, launcher, scripts, documentación,
+assets o cualquier archivo asociado requiere autorización expresa del autor.
+
+Este repositorio no otorga permiso para reutilizar el código en otros proyectos,
+revender el software, crear versiones derivadas ni distribuir copias a terceros.
+
+Ver condiciones completas en [`LICENSE.txt`](LICENSE.txt).
